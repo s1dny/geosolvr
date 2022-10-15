@@ -3,6 +3,17 @@ import json
 import random
 import wget
 import csv
+import pandas as pd 
+
+# corrects indexing in csv file
+results = pd.read_csv("results.csv")
+
+try:
+    df_results = pd.DataFrame(results.iloc[-1:,:].values,index=None)
+    index = int(list(df_results[0])[0].split('.')[0])
+
+except:
+    index = 0
 
 global_image_num = 0
 
@@ -20,6 +31,7 @@ class Generator:
         self.api_key = api_key
         self.threads = threads
 
+        global index
         global global_image_num
 
         epoch = 0
@@ -37,9 +49,10 @@ class Generator:
                 print (f'{Colors.SUCCESS} progress [{round(((global_image_num) / (num_images * threads)) * 100, 1)}%]{Colors.END} streetview found in {iso_code}\n{lat},{lng}')
                 
                 global_image_num += 1
+                index += 1
 
                 with open(metadata_file, 'a') as f:
-                    f.write(f'img_{global_image_num}.png,{iso_code},{lat},{lng},{random.randint(0, 359)}\n')
+                    f.write(f'{index}.png,{iso_code},{lat},{lng},{random.randint(0, 359)}\n')
                 
                 epoch += 1
 
@@ -83,4 +96,4 @@ class Downloader:
             lat = rows[i][2]
             lng = rows[i][3]
             heading = rows[i][4]
-            wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/img_{i}.png')
+            wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{i}.png')

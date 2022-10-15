@@ -1,9 +1,8 @@
 import threading
 
-from data import Generator
-from data import Downloader
+from data import Generator, Downloader
 
-API_KEY = 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg'
+API_KEY = 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg' #public google key
 THREADS = 8
 
 threads = []
