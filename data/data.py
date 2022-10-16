@@ -7,7 +7,7 @@ import os
 import pandas as pd 
 
 # gets last index of a csv file
-results = pd.read_csv("results.csv")
+results = pd.read_csv('results.csv')
 
 try:
     df_results = pd.DataFrame(results.iloc[-1:,:].values,index=None)
@@ -26,9 +26,9 @@ class Colors:
     END = '\033[0m'
 
 class Generator:
-    def __init__(self, num_images, metadata_file, api_key, threads):
+    def __init__(self, num_images, output_file, api_key, threads):
         self.num_images = num_images
-        self.metadata_file = metadata_file
+        self.output_file = output_file
         self.api_key = api_key
         self.threads = threads
 
@@ -52,7 +52,7 @@ class Generator:
                 global_image_num += 1
                 index += 1
 
-                with open(metadata_file, 'a') as f:
+                with open(output_file, 'a') as f:
                     f.write(f'{index}.png,{iso_code},{lat},{lng},{random.randint(0, 359)}\n')
                 
                 epoch += 1
