@@ -3,9 +3,10 @@ import json
 import random
 import wget
 import csv
+import os
 import pandas as pd 
 
-# corrects indexing in csv file
+# gets last index of a csv file
 results = pd.read_csv("results.csv")
 
 try:
@@ -86,14 +87,23 @@ class Downloader:
         self.results_file = results_file
         self.api_key = api_key
 
+        # gets last index from the image directory
+
+        try:
+            file_names = os.listdir(img_directory)
+            img_index = int(os.path.splitext(file_names[-1])[0])
+        except:
+            img_index = 0
+
         rows = []
+
         with open(results_file, 'r') as file:
             results = csv.reader(file)
             for row in results:
                 rows.append(row)
 
-        for i in range(1,len(rows)):
+        for i in range(img_index + 1, len(rows)):
             lat = rows[i][2]
             lng = rows[i][3]
             heading = rows[i][4]
-            wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{i}.png')
+            wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{str(i).zfill(6)}.png')
