@@ -4,19 +4,19 @@ import random
 import wget
 import csv
 import os
-import pandas as pd 
+import pandas as pd
 
-# gets last index of a csv file
 results = pd.read_csv('results.csv')
 
 try:
-    df_results = pd.DataFrame(results.iloc[-1:,:].values,index=None)
+    df_results = pd.DataFrame(results.iloc[-1:,:].values, index=None)
     index = int(list(df_results[0])[0].split('.')[0])
 
 except:
     index = 0
 
 global_image_num = 0
+
 
 class Colors:
     BOLD = '\033[1m'
@@ -32,8 +32,12 @@ class Generator:
         self.api_key = api_key
         self.threads = threads
 
-        global index
+        # gets last index of a csv file
+        
+
         global global_image_num
+
+        global index
 
         epoch = 0
 
@@ -50,17 +54,18 @@ class Generator:
                 print (f'{Colors.SUCCESS} progress [{round(((global_image_num) / (num_images * threads)) * 100, 1)}%]{Colors.END} streetview found in {iso_code}\n{lat},{lng}')
                 
                 global_image_num += 1
+
                 index += 1
 
                 with open(output_file, 'a') as f:
-                    f.write(f'{index}.png,{iso_code},{lat},{lng},{random.randint(0, 359)}\n')
+                    f.write(f'{str(index).zfill(6)}.png,{iso_code},{lat},{lng},{random.randint(0, 359)}\n')
                 
                 epoch += 1
 
     # returns random coordinats -> List[float, float]  
     def random_coordinates(self):
-        lat = random.uniform(66, -43)
-        lng = random.uniform(175, -98)
+        lat = random.uniform(90, -90)
+        lng = random.uniform(180, -180)
 
         return [lat, lng]
 
@@ -82,10 +87,13 @@ class Generator:
         return iso_code['address']['country_code']
 
 class Downloader:
-    def __init__(self, results_file, img_directory, api_key):
-        self.img_directory = img_directory
+    def __init__(self, results_file, img_directory, api_key, threads, thread_number):
         self.results_file = results_file
+        self.img_directory = img_directory
         self.api_key = api_key
+        self.threads = threads
+        self.thread_number = thread_number
+
 
         # gets last index from the image directory
 
@@ -102,8 +110,14 @@ class Downloader:
             for row in results:
                 rows.append(row)
 
-        for i in range(img_index + 1, len(rows)):
-            lat = rows[i][2]
-            lng = rows[i][3]
-            heading = rows[i][4]
-            wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{str(i).zfill(6)}.png')
+        for i in range(img_index + 1, len(rows), threads):
+            thread_index = i + thread_number
+            try:
+                lat = rows[thread_index][2]
+                lng = rows[thread_index][3]
+                heading = rows[thread_index][4]
+
+                wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{str(thread_index).zfill(6)}.png')
+            
+            except Exception as e:
+                ('thread index out of range: ', e)
