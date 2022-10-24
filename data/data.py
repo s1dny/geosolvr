@@ -2,14 +2,13 @@ import requests
 import json
 import random
 import wget
-import csv
 import os
 import pandas as pd
 
 results = pd.read_csv('results.csv')
 
 try:
-    df_results = pd.DataFrame(results.iloc[-1:,:].values, index=None)
+    df_results = pd.DataFrame(results.iloc[-1:,:].values, index = None)
     index = int(list(df_results[0])[0].split('.')[0])
 
 except:
@@ -20,12 +19,12 @@ global_image_num = 0
 
 class Colors:
     BOLD = '\033[1m'
+    FAIL = '\033[91m'
     SUCCESS = '\033[92m'
     WARNING = '\033[93m'
-    FAIL = '\033[91m'
     END = '\033[0m'
 
-class Generator:
+class Generate:
     def __init__(self, num_images, output_file, api_key, threads):
         self.num_images = num_images
         self.output_file = output_file
@@ -34,7 +33,6 @@ class Generator:
 
         # gets last index of a csv file
         
-
         global global_image_num
 
         global index
@@ -51,7 +49,7 @@ class Generator:
 
                 iso_code = self.reverse_geocode(lat, lng)
 
-                print (f'{Colors.SUCCESS} progress [{round(((global_image_num) / (num_images * threads)) * 100, 1)}%]{Colors.END} streetview found in {iso_code}\n{lat},{lng}')
+                print(f'{Colors.SUCCESS} progress [{round(((global_image_num) / (num_images * threads)) * 100, 1)}%]{Colors.END} streetview found in {iso_code}\n{lat},{lng}')
                 
                 global_image_num += 1
 
@@ -86,7 +84,7 @@ class Generator:
         
         return iso_code['address']['country_code']
 
-class Downloader:
+class Download:
     def __init__(self, results_file, img_directory, api_key, threads, thread_number):
         self.results_file = results_file
         self.img_directory = img_directory
@@ -103,21 +101,53 @@ class Downloader:
         except:
             img_index = 0
 
-        rows = []
+        df = pd.read_csv(results_file)
 
-        with open(results_file, 'r') as file:
-            results = csv.reader(file)
-            for row in results:
-                rows.append(row)
+        rows = df.values.tolist()
+        rows.insert(0,0)
 
-        for i in range(img_index + 1, len(rows), threads):
+        for i in range(img_index + 1, len(rows) + 1, threads):
             thread_index = i + thread_number
             try:
                 lat = rows[thread_index][2]
                 lng = rows[thread_index][3]
                 heading = rows[thread_index][4]
-
+    
                 wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{str(thread_index).zfill(6)}.png')
-            
+
             except Exception as e:
-                ('thread index out of range: ', e)
+                print('thread index out of range: ', e)
+
+class Validate:
+    def __init__(self, input_file, iso_codes_file):
+        self.input_file = input_file
+        self.iso_codes_file = iso_codes_file
+
+        iso_codes = self.get_iso_codes(iso_codes_file)
+
+        invalid_indexes = self.get_invalid_indexes(input_file, iso_codes)
+
+    # returns iso codes from provided iso codes file -> List[string, string, string ...]
+    def get_iso_codes(self, iso_codes_file):
+        iso_codes_list = []
+        iso_codes_df = pd.read_csv(iso_codes_file)
+
+        for i in range(len(iso_codes_df.index)):
+            iso_codes_list.append(iso_codes_df.iloc[i]['iso_code'])
+
+        return iso_codes_list
+
+    # returns indexes of invalid iso codes -> List[int, int, int ...]    
+    def get_invalid_indexes(self, input_file, iso_codes):
+
+        input_df = pd.read_csv(input_file)
+
+        invalid_indexes = []
+
+        for i in range(len(input_df.index)):     
+            index_iso_code = input_df.iloc[i]['iso_code']
+
+            if index_iso_code not in iso_codes:
+                invalid_indexes.append(i)
+
+        return invalid_indexes
