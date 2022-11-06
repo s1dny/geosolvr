@@ -12,7 +12,7 @@ Machine learning model to predict location of GeoGuessr images
         |-- src
         |-- .gitignore
         |-- results.csv
-        |-- iso_codes.json
+        |-- iso_codes.csv
         |-- data.py
         |-- main.py
     ```
