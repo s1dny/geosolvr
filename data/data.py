@@ -69,7 +69,7 @@ class Generate:
 
     # checks if streetview exists -> Dict or False
     def check_streetview(self, lat, lng):
-        metadata = requests.get(f'https://maps.googleapis.com/maps/api/streetview/metadata?size=640x640&location={lat},{lng}&radius=4096&key={self.api_key}').text
+        metadata = requests.get(f'https://maps.googleapis.com/maps/api/streetview/metadata?location={lat},{lng}&radius=4096&key={self.api_key}').text
         metadata = json.loads(metadata)
 
         if metadata['status'] == 'OK' and metadata['copyright'] == '© Google':
@@ -151,3 +151,4 @@ class Validate:
                 invalid_indexes.append(i)
 
         return invalid_indexes
+        
