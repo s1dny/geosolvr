@@ -46,6 +46,7 @@ class Generate:
             if metadata != False:
                 lat = metadata['location']['lat']
                 lng = metadata['location']['lng']
+                pano_id = metadata['pano_id']
 
                 iso_code = self.reverse_geocode(lat, lng)
 
@@ -56,7 +57,7 @@ class Generate:
                 index += 1
 
                 with open(output_file, 'a') as f:
-                    f.write(f'{str(index).zfill(6)}.png,{iso_code},{lat},{lng},{random.randint(0, 359)}\n')
+                    f.write(f'{str(index).zfill(6)}.png,{iso_code},{lat},{lng},{pano_id},{random.randint(0, 359)}\n')
                 
                 epoch += 1
 
@@ -69,7 +70,7 @@ class Generate:
 
     # checks if streetview exists -> Dict or False
     def check_streetview(self, lat, lng):
-        metadata = requests.get(f'https://maps.googleapis.com/maps/api/streetview/metadata?location={lat},{lng}&radius=4096&key={self.api_key}').text
+        metadata = requests.get(f'https://maps.googleapis.com/maps/api/streetview/metadata?location={lat},{lng}&radius=2048&key={self.api_key}').text
         metadata = json.loads(metadata)
 
         if metadata['status'] == 'OK' and metadata['copyright'] == '© Google':
