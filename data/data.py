@@ -4,6 +4,7 @@ import random
 import wget
 import os
 import pandas as pd
+from PIL import Image
 
 results = pd.read_csv('results.csv')
 
@@ -86,38 +87,62 @@ class Generate:
         return iso_code['address']['country_code']
 
 class Download:
-    def __init__(self, results_file, img_directory, api_key, threads, thread_number):
+    def __init__(self, download_pano, results_file, img_directory, api_key, threads, thread_number):
         self.results_file = results_file
         self.img_directory = img_directory
         self.api_key = api_key
         self.threads = threads
         self.thread_number = thread_number
-
-
+        self.download_pano = download_pano
+ 
         # gets last index from the image directory
-
+ 
         try:
             file_names = os.listdir(img_directory)
             img_index = int(os.path.splitext(file_names[-1])[0])
         except:
             img_index = 0
-
+ 
         df = pd.read_csv(results_file)
-
+ 
         rows = df.values.tolist()
         rows.insert(0,0)
-
+ 
         for i in range(img_index + 1, len(rows) + 1, threads):
             thread_index = i + thread_number
             try:
                 lat = rows[thread_index][2]
                 lng = rows[thread_index][3]
-                heading = rows[thread_index][4]
-    
-                wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={api_key}', out=f'{self.img_directory}/{str(thread_index).zfill(6)}.png')
+                pano_id = rows[thread_index][4]
+                heading = rows[thread_index][5]
+ 
+                if download_pano:
+                    self.pano(pano_id, thread_index)
 
+                else:
+                    self.static(lat, lng, heading, thread_index)
+ 
             except Exception as e:
                 print('thread index out of range: ', e)
+ 
+    def static(self, lat, lng, heading, thread_index):
+        wget.download(f'https://maps.googleapis.com/maps/api/streetview?size=640x640&location={lat},{lng}&fov=180&heading={heading}&pitch=0&key={self.api_key}', out=f'{self.img_directory}/{str(thread_index).zfill(6)}.png')
+ 
+    def pano(self, pano_id, thread_index):
+        for x in range(7):
+            for y in range(3):
+                wget.download(f'https://streetviewpixels-pa.googleapis.com/v1/tile?cb_client=apiv3&panoid={pano_id}&x={x}&y={y}&zoom=3', out=f'{self.img_directory}/{str(thread_index).zfill(6)}_{x}_{y}.png')
+        
+        output_image = Image.new('RGB', (3584, 1536))
+
+        for x in range(7):
+            for y in range(3):
+                file_name = f'{self.img_directory}/{str(thread_index).zfill(6)}_{x}_{y}.png'
+                output_image.paste(Image.open(file_name), (x * 512, y * 512))
+
+                os.remove(file_name)
+        
+        output_image.save(f'{self.img_directory}/{str(thread_index).zfill(6)}.png')
 
 class Validate:
     def __init__(self, input_file, iso_codes_file):

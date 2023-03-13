@@ -4,7 +4,7 @@ from data import Generate, Download, Validate
 
 API_KEY = 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg' #public google key
 THREADS_GENERATE = 16
-THREADS_DOWNLOAD = 8
+THREADS_DOWNLOAD = 32
 
 threads_generator = []
 threads_downloader = []
@@ -22,7 +22,7 @@ for thread in threads_generator:
 Validate(input_file = 'results.csv', iso_codes_file = 'iso_codes.csv')
 
 for thread in range(THREADS_DOWNLOAD):
-    thread = threading.Thread(target = Download, kwargs = {'results_file': 'results.csv', 'img_directory': 'src', 'api_key': API_KEY, 'threads': THREADS_DOWNLOAD, 'thread_number': thread})
+    thread = threading.Thread(target = Download, kwargs = {'download_pano': True, 'results_file': 'results.csv', 'img_directory': 'src', 'api_key': API_KEY, 'threads': THREADS_DOWNLOAD, 'thread_number': thread})
     threads_downloader.append(thread)
     
 for thread in threads_downloader:
